@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Image Tag Search</title>
+</head>
+<body>
+  <h2>Find Images by Tags</h2>
+  <form id="search-form" onsubmit="searchImages(event)">
+    <div>
+      <label for="tags">Tags:</label>
+      <input type="text" id="tags" name="tags" placeholder="Enter tags separated by commas" required>
+    </div>
+    <div>
+      <label for="min-count">Minimum Count:</label>
+      <input type="number" id="min-count" name="min-count" min="1" required>
+    </div>
+    <div>
+      <button type="submit">Search</button>
+    </div>
+  </form>
+
+  <h2>Find Images by Image Tags</h2>
+  <form id="image-tags-form" enctype="multipart/form-data">
+    <div>
+      <label for="image-file">Upload Image:</label>
+      <input type="file" id="image-file" accept="image/*" required>
+    </div>
+    <div>
+      <button type="button" onclick="getTagsFromImage()">Get Image Tags</button>
+    </div>
+  </form>
+
+  <script>
+    function searchImages(event) {
+      event.preventDefault();
+
+      var tagsInput = document.getElementById('tags');
+      var minCountInput = document.getElementById('min-count');
+
+      var tags = tagsInput.value.trim().split(',');
+      var minCount = parseInt(minCountInput.value);
+
+      // Construct the search URL with the tags and minCount as query parameters
+      var searchURL = 'https://r5lphjguqg.execute-api.us-east-1.amazonaws.com/app-prod/tags';
+
+      for (var i = 0; i < tags.length; i++) {
+        var tagParam = 'tag' + (i + 1);
+        var countParam = 'tag' + (i + 1) + 'count';
+        searchURL += tagParam + '=' + encodeURIComponent(tags[i].trim()) + '&';
+        searchURL += countParam + '=' + minCount + '&';
+      }
+
+      // Remove the trailing '&' character
+      searchURL = searchURL.slice(0, -1);
+
+      // Redirect the user to the search URL
+      window.location.href = searchURL;
+    }
+
+    function getTagsFromImage() {
+      var fileInput = document.getElementById('image-file');
+      var file = fileInput.files[0];
+
+      var reader = new FileReader();
+      reader.onload = function(event) {
+        var base64String = event.target.result;
+        sendImageForTags(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    //function sendImageForTags(base64String) 
+    {
+      // Make an API call or perform any action to send the image to the server
+      
+      // and retrieve the list of tags and their counts
+
+      // For demonstration purposes, let's assume the server returns the tags as an array
+      var tags = ['car'];
+      var tagCounts = { 'car': 1};
+
+      // Log the tags and their counts
+      console.log('Tags:', tags);
+      console.log('Tag Counts:', tagCounts);
+
+      // 
+      // Redirect the user to the search URL based on the image tags
+      //
+      var searchURL = ' ';
+
+      for (var i = 0; i < tags.length; i++) {
+        var tagParam = 'tag' + (i + 1);
+        var countParam = 'tag' + (i + 1) + 'count';
+        searchURL += tagParam + '=' + encodeURIComponent(tags[i]) + '&';
+        searchURL += countParam + '=' + tagCounts[tags[i]] + '&';
+      }
+
+      // Remove the trailing '&' character
+      searchURL = searchURL.slice(0, -1);
+
+      // Redirect the user to the search URL
+      window.location.href = searchURL;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Image List</title>
+  <style>
+    /* Styles as needed */
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Image List</h2>
+    <div id="image-list"></div>
+  </div>
+
+  <script>
+    // Set the API endpoint URLs
+    const apiEndpoint = 'https://r5lphjguqg.execute-api.us-east-1.amazonaws.com/app-prod/imagefile-storage';
+    const deleteEndpoint = 'https://r5lphjguqg.execute-api.us-east-1.amazonaws.com/app-prod/imagefile-storage/';
+
+
+
+    // Function to fetch the image list from the API
+    function fetchImageList() {
+      fetch(apiEndpoint)
+        .then(response => response.json())
+        .then(data => displayImageList(data))
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Function to display the image list
+    function displayImageList(imageList) {
+      const imageListContainer = document.getElementById('image-list');
+      imageListContainer.innerHTML = '';
+
+      imageList.forEach(imageName => {
+        const imageLink = document.createElement('a');
+        imageLink.href = '#';
+        imageLink.textContent = imageName;
+        imageLink.addEventListener('click', () => displayImage(imageName));
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', () => deleteImage(imageName));
+
+        const listItem = document.createElement('div');
+        listItem.appendChild(imageLink);
+        listItem.appendChild(deleteButton);
+
+        imageListContainer.appendChild(listItem);
+        imageListContainer.appendChild(document.createElement('br'));
+      });
+    }
+
+    // Function to display the selected image
+    function displayImage(imageName) {
+      const imageContainer = document.getElementById('image-container');
+      imageContainer.innerHTML = '';
+
+      const image = document.createElement('img');
+      image.src = `${apiEndpoint}/${imageName}`;
+      imageContainer.appendChild(image);
+    }
+
+    // Function to delete the image
+    function deleteImage(imageName) {
+      if (confirm(`Are you sure you want to delete ${imageName}?`)) {
+        fetch(`${deleteEndpoint}/${imageName}`, {
+          method: 'DELETE',
+        })
+          .then(response => {
+            if (response.ok) {
+              alert('Image deleted successfully!');
+              fetchImageList(); // Refresh the image list after deletion
+            } else {
+              alert('Image deletion failed.');
+            }
+          })
+          .catch(error => console.error('Error:', error));
+      }
+    }
+
+    // Fetch the image list on page load
+    fetchImageList();
+  </script>
+</body>
+</html>
