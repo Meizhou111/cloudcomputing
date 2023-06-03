@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image to Base64 Converter</title>
+    <script>
+        function convertToBase64() {
+            var fileInput = document.getElementById("imageInput");
+            var file = fileInput.files[0];
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var base64Image = e.target.result.split(',')[1];
+                document.getElementById("base64Output").textContent = base64Image;
+                document.getElementById("imagePreview").src = "data:image/jpeg;base64," + base64Image;
+
+                // Make POST request
+                var xhr = new XMLHttpRequest();
+                var url = "https://r5lphjguqg.execute-api.us-east-1.amazonaws.com/app-prod/images";
+                xhr.open("POST", url, true);
+                xhr.setRequestHeader("Content-Type", "application/json");
+
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        console.log("Image uploaded successfully!");
+                    }
+                };
+
+                var imageData = {
+                    image_data: base64Image
+                };
+
+                console.log("POST Body:", JSON.stringify(imageData));
+
+                xhr.send(JSON.stringify(imageData));
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</head>
+<body>
+    <h1>meizhou zhao</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <button onclick="convertToBase64()">Convert & Upload</button>
+    <h2>Base64 Output:</h2>
+    <textarea id="base64Output" rows="10" cols="50"></textarea>
+    <h2>Image Preview:</h2>
+    <img id="imagePreview" src="" alt="Image Preview" width="300" height="200">
+</body>
+</html>

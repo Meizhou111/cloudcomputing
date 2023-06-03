@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Image Tag Search</title>
+  <title>Image Tag Search and Delete</title>
 </head>
 <body>
   <h2>Find Images by Tags</h2>
@@ -23,11 +23,9 @@
     </div>
   </form>
 
-  <form id="delete-form" onsubmit="deleteImage(event)">
-    <label for="website-input">Delete Image URL:</label>
-    <input type="text" id="website-input" placeholder="Enter an image URL" required>
-    <button type="submit">Delete</button>
-  </form>
+  <h2>Delete Image</h2>
+  <input type="text" id="delete-url-input" placeholder="Enter image URL">
+  <button onclick="deleteImage()">Delete</button>
 
   <script>
     function addInputFields() {
@@ -87,41 +85,35 @@
       window.location.href = searchURL;
     }
 
-    function deleteImage(event) {
-      event.preventDefault();
-
-      var websiteInput = document.getElementById('website-input').value;
-      var imageUrl = websiteInput.trim();
-      
-      if (!imageUrl) {
-        console.log('Please enter a valid image URL.');
-        return;
-      }
-
-      var imageName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
-      var s3Url = 's3://imagefile-storage/' + imageName;
-
-      var requestBody = {
-        url: s3Url
-      };
-
-      fetch(imageUrl, {
+    function deleteImage() {
+      var deleteUrlInput = document.getElementById('delete-url-input');
+      var deleteUrl = deleteUrlInput.value.trim();
+    
+      fetch(deleteUrl, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(requestBody)
-      })
-        .then(function(response) {
-          if (response.ok) {
-            console.log('Image successfully deleted.');
-          } else {
-            console.log('Failed to delete image.');
-          }
+        body: JSON.stringify({
+          url: 's3://imagefile-storage/' + deleteUrl.substring(deleteUrl.lastIndexOf('/') + 1)
         })
-        .catch(function(error) {
-          console.log('Error:', error);
-        });
+      })
+      .then(function(response) {
+        if (response.ok) {
+          console.log("Delete request successful!");
+          // Handle the response here if needed
+        } else {
+          console.log("Delete request failed!");
+          // Handle any errors here if needed
+        }
+      })
+      .catch(function(error) {
+        console.log("Delete request failed!");
+        // Handle any errors here if needed
+      })
+      .finally(function() {
+        deleteUrlInput.value = ''; // Clear the input value
+      });
     }
   </script>
 </body>

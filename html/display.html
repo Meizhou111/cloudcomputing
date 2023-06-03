@@ -1,86 +1,81 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Image List</title>
-  <style>
-    /* Styles as needed */
-  </style>
+  <title>Image Tag Search</title>
 </head>
 <body>
-  <div class="container">
-    <h2>Image List</h2>
-    <div id="image-list"></div>
-  </div>
+  <h2>Find Images by Tags</h2>
+  <form id="search-form" onsubmit="searchImages(event)">
+    <div id="input-container">
+      <div class="input-pair">
+        <label for="tag-1">Tag:</label>
+        <input type="text" class="tag-input" name="tag-1" placeholder="Enter a tag" required>
+        <label for="count-1">Count:</label>
+        <input type="number" class="count-input" name="count-1" min="1" required>
+      </div>
+    </div>
+
+    <button type="button" onclick="addInputFields()">+</button>
+    <button type="button" onclick="removeInputFields()">-</button>
+
+    <div>
+      <button type="submit">Search</button>
+    </div>
+  </form>
+
+  <div id="search-results"></div>
 
   <script>
-    // Set the API endpoint URLs
-    const apiEndpoint = 'https://r5lphjguqg.execute-api.us-east-1.amazonaws.com/app-prod/imagefile-storage';
-    const deleteEndpoint = 'https://r5lphjguqg.execute-api.us-east-1.amazonaws.com/app-prod/imagefile-storage/';
+    function addInputFields() {
+      var inputContainer = document.getElementById('input-container');
+      var inputIndex = inputContainer.childElementCount + 1;
 
+      var inputDiv = document.createElement('div');
+      inputDiv.classList.add('input-pair');
+      inputDiv.innerHTML = `
+        <label for="tag-${inputIndex}">Tag:</label>
+        <input type="text" class="tag-input" name="tag-${inputIndex}" placeholder="Enter a tag" required>
+        <label for="count-${inputIndex}">Count:</label>
+        <input type="number" class="count-input" name="count-${inputIndex}" min="1" required>
+      `;
 
-
-    // Function to fetch the image list from the API
-    function fetchImageList() {
-      fetch(apiEndpoint)
-        .then(response => response.json())
-        .then(data => displayImageList(data))
-        .catch(error => console.error('Error:', error));
+      inputContainer.appendChild(inputDiv);
     }
 
-    // Function to display the image list
-    function displayImageList(imageList) {
-      const imageListContainer = document.getElementById('image-list');
-      imageListContainer.innerHTML = '';
+    function removeInputFields() {
+      var inputContainer = document.getElementById('input-container');
+      var inputDivs = inputContainer.getElementsByClassName('input-pair');
+      var inputCount = inputDivs.length;
 
-      imageList.forEach(imageName => {
-        const imageLink = document.createElement('a');
-        imageLink.href = '#';
-        imageLink.textContent = imageName;
-        imageLink.addEventListener('click', () => displayImage(imageName));
-
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', () => deleteImage(imageName));
-
-        const listItem = document.createElement('div');
-        listItem.appendChild(imageLink);
-        listItem.appendChild(deleteButton);
-
-        imageListContainer.appendChild(listItem);
-        imageListContainer.appendChild(document.createElement('br'));
-      });
-    }
-
-    // Function to display the selected image
-    function displayImage(imageName) {
-      const imageContainer = document.getElementById('image-container');
-      imageContainer.innerHTML = '';
-
-      const image = document.createElement('img');
-      image.src = `${apiEndpoint}/${imageName}`;
-      imageContainer.appendChild(image);
-    }
-
-    // Function to delete the image
-    function deleteImage(imageName) {
-      if (confirm(`Are you sure you want to delete ${imageName}?`)) {
-        fetch(`${deleteEndpoint}/${imageName}`, {
-          method: 'DELETE',
-        })
-          .then(response => {
-            if (response.ok) {
-              alert('Image deleted successfully!');
-              fetchImageList(); // Refresh the image list after deletion
-            } else {
-              alert('Image deletion failed.');
-            }
-          })
-          .catch(error => console.error('Error:', error));
+      if (inputCount > 1) {
+        inputContainer.removeChild(inputDivs[inputCount - 1]);
       }
     }
 
-    // Fetch the image list on page load
-    fetchImageList();
+    function searchImages(event) {
+      event.preventDefault();
+
+      var inputs = document.getElementsByClassName('tag-input');
+      var tags = [];
+
+      for (var i = 0; i < inputs.length; i++) {
+        tags.push(inputs[i].value.trim());
+      }
+
+      inputs = document.getElementsByClassName('count-input');
+      var counts = [];
+
+      for (var i = 0; i < inputs.length; i++) {
+        var count = parseInt(inputs[i].value);
+        counts.push(count);
+      }
+
+      // Simulating the search results
+      var searchResults = "Search Results: " + tags.join(", ") + " - Counts: " + counts.join(", ");
+
+      var searchResultsContainer = document.getElementById('search-results');
+      searchResultsContainer.innerHTML = "<h3>" + searchResults + "</h3>";
+    }
   </script>
 </body>
 </html>

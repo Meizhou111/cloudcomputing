@@ -6,68 +6,122 @@
 <body>
   <h2>Find Images by Tags</h2>
   <form id="search-form" onsubmit="searchImages(event)">
-    <div>
-      <label for="tags">Tags:</label>
-      <input type="text" id="tags" name="tags" placeholder="Enter tags separated by commas" required>
+    <div id="input-container">
+      <div class="input-pair">
+        <label for="tag-1">Tag:</label>
+        <input type="text" class="tag-input" name="tag-1" placeholder="Enter a tag" required>
+        <label for="count-1">Count:</label>
+        <input type="number" class="count-input" name="count-1" min="1" required>
+      </div>
     </div>
-    <div>
-      <label for="min-count">Minimum Count:</label>
-      <input type="number" id="min-count" name="min-count" min="1" required>
-    </div>
+
+    <button type="button" onclick="addInputFields()">+</button>
+    <button type="button" onclick="removeInputFields()">-</button>
+
     <div>
       <button type="submit">Search</button>
     </div>
   </form>
 
+  <input type="file" id="image-input" accept="image/*">
+  <button onclick="convertToBase64()">Convert and Call API</button>
+
   <script>
+    function addInputFields() {
+      var inputContainer = document.getElementById('input-container');
+      var inputIndex = inputContainer.childElementCount + 1;
+
+      var inputDiv = document.createElement('div');
+      inputDiv.classList.add('input-pair');
+      inputDiv.innerHTML = `
+        <label for="tag-${inputIndex}">Tag:</label>
+        <input type="text" class="tag-input" name="tag-${inputIndex}" placeholder="Enter a tag" required>
+        <label for="count-${inputIndex}">Count:</label>
+        <input type="number" class="count-input" name="count-${inputIndex}" min="1" required>
+      `;
+
+      inputContainer.appendChild(inputDiv);
+    }
+
+    function removeInputFields() {
+      var inputContainer = document.getElementById('input-container');
+      var inputDivs = inputContainer.getElementsByClassName('input-pair');
+      var inputCount = inputDivs.length;
+
+      if (inputCount > 1) {
+        inputContainer.removeChild(inputDivs[inputCount - 1]);
+      }
+    }
+
+    function convertToBase64() {
+      var fileInput = document.getElementById('image-input');
+      var file = fileInput.files[0];
+
+      if (file) {
+        var reader = new FileReader();
+
+        reader.onload = function(event) {
+          var base64String = event.target.result;
+          var requestBody = {
+            image_data: base64String
+          };
+
+          fetch('https://r5lphjguqg.execute-api.us-east-1.amazonaws.com/app-prod/images', {
+            method: 'POST',
+            body: JSON.stringify(requestBody),
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+            .then(response => response.json())
+            .then(data => {
+              // Handle the response from the API
+              console.log(data);
+              // Perform actions with the response data
+            })
+            .catch(error => {
+              // Handle any errors
+              console.error(error);
+            });
+        };
+
+        reader.readAsDataURL(file);
+      } else {
+        console.log('Please select a file.');
+      }
+    }
+
     function searchImages(event) {
       event.preventDefault();
 
-      var tagsInput = document.getElementById('tags');
-      var minCountInput = document.getElementById('min-count');
+      var inputs = document.getElementsByClassName('tag-input');
+      var tags = [];
 
-      var tags = tagsInput.value.trim().split(',');
-      var minCount = parseInt(minCountInput.value);
+      for (var i = 0; i < inputs.length; i++) {
+        tags.push(inputs[i].value.trim());
+      }
 
-      // Construct the search URL with the tags and minCount as query parameters
+      inputs = document.getElementsByClassName('count-input');
+      var counts = [];
+
+      for (var i = 0; i < inputs.length; i++) {
+        var count = parseInt(inputs[i].value);
+        counts.push(count);
+      }
+
       var searchURL = 'https://r5lphjguqg.execute-api.us-east-1.amazonaws.com/app-prod/tags?';
 
       for (var i = 0; i < tags.length; i++) {
         var tagParam = 'tag' + (i + 1);
         var countParam = 'tag' + (i + 1) + 'count';
-        searchURL += tagParam + '=' + encodeURIComponent(tags[i].trim()) + '&';
-        searchURL += countParam + '=' + minCount + '&';
+        searchURL += tagParam + '=' + encodeURIComponent(tags[i]) + '&';
+        searchURL += countParam + '=' + counts[i] + '&';
       }
 
-      // Remove the trailing '&' character
       searchURL = searchURL.slice(0, -1);
 
-      // Redirect the user to the search URL
       window.location.href = searchURL;
     }
-
-    function displayImages(imageUrls) {
-        var imageContainer = document.getElementById('image-container');
-        imageContainer.innerHTML = '';
-      
-        for (var i = 0; i < imageUrls.length; i++) {
-          var imageUrl = imageUrls[i];
-          var convertedUrl = convertS3Url(imageUrl);
-      
-          var link = document.createElement('a');
-          link.href = convertedUrl;
-          link.target = '_blank'; // Open the link in a new tab
-          link.textContent = 'Image ' + (i + 1);
-      
-          var br = document.createElement('br');
-      
-          imageContainer.appendChild(link);
-          imageContainer.appendChild(br);
-        }
-      }
-      
-
-
   </script>
 </body>
 </html>

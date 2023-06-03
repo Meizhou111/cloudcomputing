@@ -23,11 +23,7 @@
     </div>
   </form>
 
-  <form id="delete-form" onsubmit="deleteImage(event)">
-    <label for="website-input">Delete Image URL:</label>
-    <input type="text" id="website-input" placeholder="Enter an image URL" required>
-    <button type="submit">Delete</button>
-  </form>
+  <div id="results-container"></div>
 
   <script>
     function addInputFields() {
@@ -84,44 +80,43 @@
       }
 
       searchURL = searchURL.slice(0, -1);
-      window.location.href = searchURL;
+
+      // Make an AJAX request to retrieve the search results
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+          if (xhr.status === 200) {
+            var response = JSON.parse(xhr.responseText);
+            displayResults(response.links);
+          } else {
+            console.error('Request failed. Status:', xhr.status);
+          }
+        }
+      };
+      xhr.open('GET', searchURL);
+      xhr.send();
     }
 
-    function deleteImage(event) {
-      event.preventDefault();
+    function displayResults(links) {
+      var resultsContainer = document.getElementById('results-container');
+      resultsContainer.innerHTML = '';
 
-      var websiteInput = document.getElementById('website-input').value;
-      var imageUrl = websiteInput.trim();
-      
-      if (!imageUrl) {
-        console.log('Please enter a valid image URL.');
-        return;
+      for (var i = 0; i < links.length; i++) {
+        var link = document.createElement('a');
+        link.href = links[i];
+        link.target = '_blank';
+        link.innerText = links[i];
+
+        var img = document.createElement('img');
+        img.src = links[i];
+        img.style.maxWidth = '500px';
+        img.style.marginBottom = '10px';
+
+        resultsContainer.appendChild(link);
+        resultsContainer.appendChild(document.createElement('br'));
+        resultsContainer.appendChild(img);
+        resultsContainer.appendChild(document.createElement('br'));
       }
-
-      var imageName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
-      var s3Url = 's3://imagefile-storage/' + imageName;
-
-      var requestBody = {
-        url: s3Url
-      };
-
-      fetch(imageUrl, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      })
-        .then(function(response) {
-          if (response.ok) {
-            console.log('Image successfully deleted.');
-          } else {
-            console.log('Failed to delete image.');
-          }
-        })
-        .catch(function(error) {
-          console.log('Error:', error);
-        });
     }
   </script>
 </body>
